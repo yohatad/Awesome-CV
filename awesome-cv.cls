@@ -102,7 +102,7 @@
 %-------------------------------------------------------------------------------
 %% Page Layout
 % Configure page margins with geometry
-\geometry{left=1.0cm, top=0.5cm, right=1.0cm, bottom=1.0cm, footskip=.2cm}
+\geometry{left=1.5cm, top=0.5cm, right=1.5cm, bottom=1.0cm, footskip=.2cm}
 
 %% Header & Footer
 % Set offset to each header and footer
@@ -202,12 +202,12 @@
 \newcommand*{\entrypositionstyle}[1]{{\fontsize{9pt}{1em}\bodyfont\scshape\color{graytext} #1}}
 \newcommand*{\entrydatestyle}[1]{{\fontsize{8pt}{1em}\bodyfontlight\slshape\color{graytext} #1}}
 \newcommand*{\entrylocationstyle}[1]{{\fontsize{9pt}{1em}\bodyfontlight\slshape\color{awesome} #1}}
-\newcommand*{\descriptionstyle}[1]{{\fontsize{9pt}{1em}\bodyfontlight\upshape\color{text} #1}}
-\newcommand*{\entrylinkstyle}[1]{{\fontsize{9pt}{1em}\bodyfont\scshape\color{blue} #1}}
+\newcommand*{\descriptionstyle}[1]{{\fontsize{10pt}{1em}\bodyfontlight\upshape\color{text} #1}}
+\newcommand*{\entrylinkstyle}[1]{{\fontsize{10pt}{1em}\bodyfont\scshape\color{blue} #1}}
 
 % For elements of skill
-\newcommand*{\skilltypestyle}[1]{{\fontsize{9pt}{1em}\bodyfont\bfseries\color{darktext} #1}}
-\newcommand*{\skillsetstyle}[1]{{\fontsize{8pt}{1em}\bodyfontlight\color{text} #1}}
+\newcommand*{\skilltypestyle}[1]{{\fontsize{10pt}{1em}\bodyfont\bfseries\color{darktext} #1}}
+\newcommand*{\skillsetstyle}[1]{{\fontsize{9pt}{1em}\bodyfontlight\color{text} #1}}
 
 %-------------------------------------------------------------------------------
 %                Commands for personal information
@@ -700,9 +700,9 @@
 \RequirePackage[ % BibLaTeX
 	sorting=ydnt, % Sorts entries by year (descending order), name, title
 	style=verbose,
-	doi=false,
+	doi=true,
 	isbn=true,
-	url=false,
+	url=true,
 	eprint=false,
 	backref = false, % include back references in bibliography
 	maxcitenames=3, % affects only the citations in the document body
@@ -737,16 +737,22 @@
   \newblock%
   {%
     \fontsize{9pt}{1em}\bodyfontlight\color{graytext}%
-    \textcolor{red}{\usebibmacro{journal+issuetitle}}% Make journal and issue title red
-    \setunit{\space}%
-    \printfield{pages}%
-    \newunit%
-    \printlist{publisher}%
-    \setunit*{\addcomma\space}%
+    % --- journal + note (both red) ---
+    \textcolor{red}{%
+      \printfield{journaltitle}%
+      \iffieldundef{note}{}{, \space \printfield{note}}%
+    }%
+    % --- Vol., Issue, Year with clean commas/spaces ---
+    \setunit{\addcomma\space}%
+    \printtext{Vol.\ \printfield{volume}}%
+    \iffieldundef{number}{}{%
+      \setunit{\addcomma\space}%
+      \printtext{Issue\ \printfield{number}}%
+    }%
+    \setunit{\addcomma\space}%
     \printfield{year}%
-    \newunit%
-  }
-  \par\vspace{0.3\baselineskip}
+  }%
+  \par\vspace{0.3\baselineskip}%
 }
 
 \DeclareBibliographyDriver{inproceedings}{%
@@ -788,25 +794,28 @@
 }
 
 \DeclareBibliographyDriver{misc}{%
-  \fontsize{10pt}{1em}\bodyfont%  
-  \printfield{title}%
+  \fontsize{10pt}{1em}\bodyfont%
+  % --- Title clickable if URL exists ---
+  \iffieldundef{url}
+    {\printfield{title}} % no URL → plain title
+    {\href{\thefield{url}}{\printfield{title}}} % clickable title
   \newblock%
   \printnames{author}%
   \par%
   \newblock%
   {%
-  \fontsize{9pt}{1em}\bodyfontlight\color{graytext}%
-    \printfield{booktitle}%
-    \setunit*{\addcomma\space}%
-    \textcolor{red}{\printfield{howpublished}}%
-    \setunit*{\addcomma\space}%
-    \printfield{year}%
-    \setunit{\addcomma\space}%
-    \printlist{location}%
-    \newunit%
-  }
-  \par\vspace{0.3\baselineskip}
+    \fontsize{9pt}{1em}\bodyfontlight\color{graytext}%
+    % howpublished (red), e.g. "Poster presented at NeurIPS"
+    \iffieldundef{howpublished}{}{\textcolor{red}{\printfield{howpublished}}}%
+    % location (address is aliased to location in biblatex)
+    \iffieldundef{location}{}{\setunit{\addcomma\space}\printlist{location}}%
+    % month + year
+    \iffieldundef{year}{}{\setunit{\addcomma\space}\printdate}%
+  }%
+  \par\vspace{0.3\baselineskip}%
 }
+
+
 
 \DeclareBibliographyDriver{report}{%
   \fontsize{9pt}{1em}\bodyfont%
